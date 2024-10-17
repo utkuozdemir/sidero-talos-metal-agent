@@ -1,0 +1,61 @@
+syntax = "proto3";
+package management;
+
+option go_package = "github.com/siderolabs/talos-metal-agent/internal/agentpb";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message GetPowerManagementRequest {
+  message IPMI {
+    string check_username = 1;
+  }
+
+  message API {}
+
+  IPMI ipmi = 1;
+  API api = 2;
+}
+
+message GetPowerManagementResponse {
+  message IPMI {
+    string address = 1;
+    uint32 port = 2;
+    bool user_exists = 3;
+  }
+
+  message API {}
+
+  IPMI ipmi = 1;
+  API api = 2;
+}
+
+message SetPowerManagementRequest {
+  message IPMI {
+    string username = 1;
+    string password = 2;
+  }
+
+  message API {}
+
+  IPMI ipmi = 1;
+  API api = 2;
+}
+
+message SetPowerManagementResponse {}
+
+message RebootRequest {}
+
+message RebootResponse {}
+
+message WipeRequest {}
+
+message WipeResponse {}
+
+service AgentService {
+  rpc GetPowerManagement(GetPowerManagementRequest) returns (GetPowerManagementResponse);
+  rpc SetPowerManagement(SetPowerManagementRequest) returns (SetPowerManagementResponse);
+  rpc Reboot(RebootRequest) returns (RebootResponse);
+  rpc WipeDisks(WipeRequest) returns (WipeResponse);
+}

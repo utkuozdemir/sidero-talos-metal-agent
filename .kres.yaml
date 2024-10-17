@@ -1,0 +1,106 @@
+---
+kind: golang.Build
+spec:
+  outputs:
+    linux-amd64:
+      GOOS: linux
+      GOARCH: amd64
+    linux-arm64:
+      GOOS: linux
+      GOARCH: arm64
+---
+kind: golang.Generate
+spec:
+  versionPackagePath: internal/version
+  baseSpecPath: /api
+  vtProtobufEnabled: true
+  specs:
+    - source: api/agent/agent.proto
+      subdirectory: agent
+---
+kind: service.CodeCov
+spec:
+  targetThreshold: 0
+---
+kind: common.Image
+spec:
+  additionalImages: [] # explicitly set to empty to prevent kres from bringing in fhs etc.
+  pushLatest: false
+  extraEnvironment:
+    PLATFORM: linux/amd64,linux/arm64
+---
+kind: custom.Step
+name: image-boot-assets
+spec:
+  ghaction:
+    enabled: true
+    environment:
+      TEMP_REGISTRY: registry.dev.siderolabs.io
+  makefile:
+    enabled: true
+    phony: true
+    script:
+      - >-
+        EXTENSIONS_REPO=$(EXTENSIONS_REPO)
+        EXTENSIONS_REF=$(EXTENSIONS_REF)
+        EXTENSIONS_PATH=$(EXTENSIONS_PATH)
+        IMAGER_REGISTRY_AND_USERNAME=$(IMAGER_REGISTRY_AND_USERNAME)
+        IMAGER_TAG=$(IMAGER_TAG)
+        PUSH_TAG=$(PUSH_TAG)
+        BUILD_TAG=$(TAG)
+        OUTPUT_REGISTRY_AND_USERNAME=$(OUTPUT_REGISTRY_AND_USERNAME)
+        TEMP_REGISTRY=$(TEMP_REGISTRY)
+        hack/boot-assets/build.sh
+    variables: # MAKE SURE to have the same values in the push-boot-assets step as well
+      - name: EXTENSIONS_REPO
+        defaultValue: https://github.com/utkuozdemir/sidero-extensions.git # # todo: temporary, revert to the value below after https://github.com/siderolabs/extensions/pull/491 is merged
+        #defaultValue: https://github.com/siderolabs/extensions.git
+      - name: EXTENSIONS_REF
+        defaultValue: metal-agent-mode # todo: temporary, revert to the value below after https://github.com/siderolabs/extensions/pull/491 is merged
+        #defaultValue: main
+      - name: EXTENSIONS_PATH
+        defaultValue: guest-agents/metal-agent
+      - name: IMAGER_REGISTRY_AND_USERNAME
+        defaultValue: ghcr.io/siderolabs
+      - name: IMAGER_TAG
+        # this must point to a commit where Talos agent mode logic was introduced,
+        # i.e., not older than https://github.com/siderolabs/talos/commit/2136358d65ddf6ad040ed62c835b335f99a59399
+        defaultValue: v1.9.0-alpha.0-53-g05c620957
+      - name: PUSH_TAG
+        defaultValue: "" # if specified, needs to be a semver tag for the extension validation to not fail
+      - name: OUTPUT_REGISTRY_AND_USERNAME
+        defaultValue: ghcr.io/siderolabs
+      - name: TEMP_REGISTRY
+        defaultValue: 127.0.0.1:5005 # local development registry
+---
+kind: custom.Step
+name: push-boot-assets
+spec:
+  ghaction:
+    enabled: true
+    condition: except-pull-request
+  makefile:
+    enabled: true
+    phony: true
+    script:
+      - >-
+        IMAGER_TAG=$(IMAGER_TAG)
+        PUSH_TAG=$(PUSH_TAG)
+        BUILD_TAG=$(TAG)
+        OUTPUT_REGISTRY_AND_USERNAME=$(OUTPUT_REGISTRY_AND_USERNAME)
+        hack/boot-assets/push.sh
+    variables: # MAKE SURE to have the same values in the image-boot-assets step as well
+      - name: IMAGER_TAG
+        defaultValue: v1.9.0-alpha.0-53-g05c620957 # point to the same one above
+      - name: PUSH_TAG
+        defaultValue: "" # point to the same one above
+      - name: OUTPUT_REGISTRY_AND_USERNAME
+        defaultValue: ghcr.io/siderolabs
+---
+kind: auto.CustomSteps
+spec:
+  steps:
+    - name: image-boot-assets
+      toplevel: true
+    - name: push-boot-assets
+      toplevel: true
