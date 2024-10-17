@@ -1,0 +1,30 @@
+---
+kind: golang.Build
+spec:
+  outputs:
+    linux-amd64:
+      GOOS: linux
+      GOARCH: amd64
+    linux-arm64:
+      GOOS: linux
+      GOARCH: arm64
+---
+kind: golang.Generate
+spec:
+  versionPackagePath: internal/version
+  baseSpecPath: /api
+  vtProtobufEnabled: true
+  specs:
+    - source: api/agent/agent.proto
+      subdirectory: agent
+---
+kind: service.CodeCov
+spec:
+  targetThreshold: 0
+---
+kind: common.Image
+spec:
+  additionalImages: [] # explicitly set to empty to prevent kres from bringing in fhs etc.
+  pushLatest: false
+  extraEnvironment:
+    PLATFORM: linux/amd64,linux/arm64

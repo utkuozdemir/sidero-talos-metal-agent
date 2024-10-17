@@ -1,0 +1,26 @@
+syntax = "proto3";
+package management;
+
+option go_package = "github.com/siderolabs/talos-metal-agent/internal/agentpb";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message SetIPMICredentialsRequest {}
+
+message SetIPMICredentialsResponse {
+  string password = 1;
+}
+
+message GetIPMIInfoRequest {}
+
+message GetIPMIInfoResponse {
+  string ip = 1;
+  uint32 port = 2;
+}
+
+service AgentService {
+  rpc SetIPMICredentials(SetIPMICredentialsRequest) returns (SetIPMICredentialsResponse);
+  rpc GetIPMIInfo(GetIPMIInfoRequest) returns (GetIPMIInfoResponse);
+}
