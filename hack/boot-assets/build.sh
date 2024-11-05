@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_DIR=$(pwd)
+RUN_DIR=$(pwd)
 
 TEMP_USERNAME=siderolabs
 
@@ -17,6 +17,13 @@ echo "Using PUSH_TAG=$PUSH_TAG"
 make image-talos-metal-agent PUSH=true REGISTRY="$TEMP_REGISTRY" USERNAME="$TEMP_USERNAME" TAG="$PUSH_TAG" PLATFORM=linux/amd64,linux/arm64
 
 TEMP_DIR=$(mktemp -d -t agent-boot-assets-XXXXX)
+
+function cleanup() {
+  cd "${RUN_DIR}"
+  rm -rf "$TEMP_DIR"
+}
+
+trap cleanup EXIT SIGINT
 
 echo "Building in $TEMP_DIR"
 
@@ -68,7 +75,7 @@ ASSETS_DIR="$TEMP_DIR/assets"
 
 mkdir -p "$ASSETS_DIR"
 
-SCRIPT_DIR="$PROJECT_DIR/hack/boot-assets"
+SCRIPT_DIR="$RUN_DIR/hack/boot-assets"
 
 function build_artifacts() {
   local arch=$1
@@ -90,7 +97,5 @@ cd "$TEMP_DIR"
 cp "$SCRIPT_DIR/Dockerfile" .
 
 docker build -t "$FINAL_IMAGE" .
-
-rm -rf "$TEMP_DIR"
 
 echo "Built image: $FINAL_IMAGE"
