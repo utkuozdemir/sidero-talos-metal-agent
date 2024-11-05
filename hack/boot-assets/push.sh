@@ -8,7 +8,7 @@ fi
 
 # build and push the final image containing all the artifacts
 
-FINAL_IMAGE="$OUTPUT_REGISTRY_AND_USERNAME/boot-assets:$PUSH_TAG"
+FINAL_IMAGE="$OUTPUT_REGISTRY_AND_USERNAME/talos-metal-agent-boot-assets:$PUSH_TAG"
 
 docker push "$FINAL_IMAGE"
 
