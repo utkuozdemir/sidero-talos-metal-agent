@@ -62,6 +62,13 @@ func NewServer(talosClient TalosClient, ipmiClientFactory IPMIClientFactory, tes
 	}
 }
 
+// Hello is an endpoint to check if the service is available.
+func (s *Server) Hello(_ context.Context, _ *agentpb.HelloRequest) (*agentpb.HelloResponse, error) {
+	s.logger.Debug("hello", zap.Bool("test_mode", s.testMode))
+
+	return &agentpb.HelloResponse{}, nil
+}
+
 // GetPowerManagement returns the power management info.
 func (s *Server) GetPowerManagement(_ context.Context, req *agentpb.GetPowerManagementRequest) (*agentpb.GetPowerManagementResponse, error) {
 	s.logger.Debug("get power management", zap.Bool("test_mode", s.testMode))
@@ -136,7 +143,7 @@ func (s *Server) Reboot(ctx context.Context, _ *agentpb.RebootRequest) (*agentpb
 // WipeDisks wipes the disks.
 //
 // todo: eventually implement (probably in machined)
-func (s *Server) WipeDisks(context.Context, *agentpb.WipeRequest) (*agentpb.WipeResponse, error) {
+func (s *Server) WipeDisks(context.Context, *agentpb.WipeDisksRequest) (*agentpb.WipeDisksResponse, error) {
 	s.logger.Info("wipe disks requested")
 
 	return nil, status.Errorf(codes.Unimplemented, "method WipeDisks not implemented")

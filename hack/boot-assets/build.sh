@@ -33,7 +33,7 @@ cd "$TEMP_DIR"
 
 git clone "$EXTENSIONS_REPO" extensions
 cd extensions
-git checkout "$EXTENSIONS_REF"
+git -c advice.detachedHead=false checkout "$EXTENSIONS_REF"
 
 yq e -i ".IMAGE_PREFIX = \"$TEMP_REGISTRY/$TEMP_USERNAME\"" "$EXTENSIONS_PATH/vars.yaml"
 yq e -i ".VERSION = \"$PUSH_TAG\"" "$EXTENSIONS_PATH/vars.yaml"
@@ -43,16 +43,43 @@ make metal-agent PUSH=true REGISTRY="$TEMP_REGISTRY" USERNAME="$TEMP_USERNAME" T
 EXTENSION_IMAGE="$TEMP_REGISTRY/$TEMP_USERNAME/metal-agent:$PUSH_TAG"
 IMAGER_IMAGE="$IMAGER_REGISTRY_AND_USERNAME/imager:$IMAGER_TAG"
 
+mapfile -t FIRMWARE_EXTENSIONS <<'EOF'
+siderolabs/amd-ucode
+siderolabs/amdgpu-firmware
+siderolabs/bnx2-bnx2x
+siderolabs/chelsio-firmware
+siderolabs/i915-ucode
+siderolabs/intel-ice-firmware
+siderolabs/intel-ucode
+siderolabs/qlogic-firmware
+siderolabs/realtek-firmware
+EOF
+
 # build talos boot artifacts with the extension we built above using imager, for both amd64 and arm64
 
-# todo:
-# here, also add the firmware extensions to make it more similar to the final production version (a real bare-metal server booted over image factory)
-# to do that, we need here the image digests based on the talos version (so `IMAGER_TAG` needs to point to a release version),
-# use something like this to get the extension image digests: crane export ghcr.io/siderolabs/extensions:v1.8.0-beta.1 | tar x -O image-digests
+function filter_firmware_extensions() {
+  # Read input from stdin and process each line
+  while IFS= read -r line; do
+    # Check if any directory name matches in the line
+    for dir in "${FIRMWARE_EXTENSIONS[@]}"; do
+      if [[ $line == *"$dir"* ]]; then
+        echo "$line"
+        break
+      fi
+    done
+  done
+}
 
 function build_image_profile() {
   local arch=$1
   local kind=$2
+  local extensions
+
+  # prepare extensions list with proper indentation
+  extensions=$(crane export "$EXTENSION_DIGESTS_IMAGE:$IMAGER_TAG" |
+    tar x -O image-digests |
+    filter_firmware_extensions |
+    sed 's/^/    - imageRef: /')
 
   cat <<EOF
 arch: $arch
@@ -64,6 +91,7 @@ input:
   initramfs:
     path: /usr/install/$arch/initramfs.xz
   systemExtensions:
+$extensions
     - imageRef: $EXTENSION_IMAGE
 output:
   kind: $kind

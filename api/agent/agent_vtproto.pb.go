@@ -20,6 +20,38 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+func (m *HelloRequest) CloneVT() *HelloRequest {
+	if m == nil {
+		return (*HelloRequest)(nil)
+	}
+	r := new(HelloRequest)
+	if len(m.unknownFields) > 0 {
+		r.unknownFields = make([]byte, len(m.unknownFields))
+		copy(r.unknownFields, m.unknownFields)
+	}
+	return r
+}
+
+func (m *HelloRequest) CloneMessageVT() proto.Message {
+	return m.CloneVT()
+}
+
+func (m *HelloResponse) CloneVT() *HelloResponse {
+	if m == nil {
+		return (*HelloResponse)(nil)
+	}
+	r := new(HelloResponse)
+	if len(m.unknownFields) > 0 {
+		r.unknownFields = make([]byte, len(m.unknownFields))
+		copy(r.unknownFields, m.unknownFields)
+	}
+	return r
+}
+
+func (m *HelloResponse) CloneMessageVT() proto.Message {
+	return m.CloneVT()
+}
+
 func (m *GetPowerManagementRequest_IPMI) CloneVT() *GetPowerManagementRequest_IPMI {
 	if m == nil {
 		return (*GetPowerManagementRequest_IPMI)(nil)
@@ -224,11 +256,11 @@ func (m *RebootResponse) CloneMessageVT() proto.Message {
 	return m.CloneVT()
 }
 
-func (m *WipeRequest) CloneVT() *WipeRequest {
+func (m *WipeDisksRequest) CloneVT() *WipeDisksRequest {
 	if m == nil {
-		return (*WipeRequest)(nil)
+		return (*WipeDisksRequest)(nil)
 	}
-	r := new(WipeRequest)
+	r := new(WipeDisksRequest)
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
 		copy(r.unknownFields, m.unknownFields)
@@ -236,15 +268,15 @@ func (m *WipeRequest) CloneVT() *WipeRequest {
 	return r
 }
 
-func (m *WipeRequest) CloneMessageVT() proto.Message {
+func (m *WipeDisksRequest) CloneMessageVT() proto.Message {
 	return m.CloneVT()
 }
 
-func (m *WipeResponse) CloneVT() *WipeResponse {
+func (m *WipeDisksResponse) CloneVT() *WipeDisksResponse {
 	if m == nil {
-		return (*WipeResponse)(nil)
+		return (*WipeDisksResponse)(nil)
 	}
-	r := new(WipeResponse)
+	r := new(WipeDisksResponse)
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
 		copy(r.unknownFields, m.unknownFields)
@@ -252,10 +284,42 @@ func (m *WipeResponse) CloneVT() *WipeResponse {
 	return r
 }
 
-func (m *WipeResponse) CloneMessageVT() proto.Message {
+func (m *WipeDisksResponse) CloneMessageVT() proto.Message {
 	return m.CloneVT()
 }
 
+func (this *HelloRequest) EqualVT(that *HelloRequest) bool {
+	if this == that {
+		return true
+	} else if this == nil || that == nil {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *HelloRequest) EqualMessageVT(thatMsg proto.Message) bool {
+	that, ok := thatMsg.(*HelloRequest)
+	if !ok {
+		return false
+	}
+	return this.EqualVT(that)
+}
+func (this *HelloResponse) EqualVT(that *HelloResponse) bool {
+	if this == that {
+		return true
+	} else if this == nil || that == nil {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *HelloResponse) EqualMessageVT(thatMsg proto.Message) bool {
+	that, ok := thatMsg.(*HelloResponse)
+	if !ok {
+		return false
+	}
+	return this.EqualVT(that)
+}
 func (this *GetPowerManagementRequest_IPMI) EqualVT(that *GetPowerManagementRequest_IPMI) bool {
 	if this == that {
 		return true
@@ -484,7 +548,7 @@ func (this *RebootResponse) EqualMessageVT(thatMsg proto.Message) bool {
 	}
 	return this.EqualVT(that)
 }
-func (this *WipeRequest) EqualVT(that *WipeRequest) bool {
+func (this *WipeDisksRequest) EqualVT(that *WipeDisksRequest) bool {
 	if this == that {
 		return true
 	} else if this == nil || that == nil {
@@ -493,14 +557,14 @@ func (this *WipeRequest) EqualVT(that *WipeRequest) bool {
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-func (this *WipeRequest) EqualMessageVT(thatMsg proto.Message) bool {
-	that, ok := thatMsg.(*WipeRequest)
+func (this *WipeDisksRequest) EqualMessageVT(thatMsg proto.Message) bool {
+	that, ok := thatMsg.(*WipeDisksRequest)
 	if !ok {
 		return false
 	}
 	return this.EqualVT(that)
 }
-func (this *WipeResponse) EqualVT(that *WipeResponse) bool {
+func (this *WipeDisksResponse) EqualVT(that *WipeDisksResponse) bool {
 	if this == that {
 		return true
 	} else if this == nil || that == nil {
@@ -509,13 +573,79 @@ func (this *WipeResponse) EqualVT(that *WipeResponse) bool {
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-func (this *WipeResponse) EqualMessageVT(thatMsg proto.Message) bool {
-	that, ok := thatMsg.(*WipeResponse)
+func (this *WipeDisksResponse) EqualMessageVT(thatMsg proto.Message) bool {
+	that, ok := thatMsg.(*WipeDisksResponse)
 	if !ok {
 		return false
 	}
 	return this.EqualVT(that)
 }
+func (m *HelloRequest) MarshalVT() (dAtA []byte, err error) {
+	if m == nil {
+		return nil, nil
+	}
+	size := m.SizeVT()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *HelloRequest) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *HelloRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	if m == nil {
+		return 0, nil
+	}
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.unknownFields != nil {
+		i -= len(m.unknownFields)
+		copy(dAtA[i:], m.unknownFields)
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *HelloResponse) MarshalVT() (dAtA []byte, err error) {
+	if m == nil {
+		return nil, nil
+	}
+	size := m.SizeVT()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *HelloResponse) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *HelloResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	if m == nil {
+		return 0, nil
+	}
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.unknownFields != nil {
+		i -= len(m.unknownFields)
+		copy(dAtA[i:], m.unknownFields)
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *GetPowerManagementRequest_IPMI) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
@@ -1015,7 +1145,7 @@ func (m *RebootResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *WipeRequest) MarshalVT() (dAtA []byte, err error) {
+func (m *WipeDisksRequest) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -1028,12 +1158,12 @@ func (m *WipeRequest) MarshalVT() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *WipeRequest) MarshalToVT(dAtA []byte) (int, error) {
+func (m *WipeDisksRequest) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
 }
 
-func (m *WipeRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+func (m *WipeDisksRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1048,7 +1178,7 @@ func (m *WipeRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *WipeResponse) MarshalVT() (dAtA []byte, err error) {
+func (m *WipeDisksResponse) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -1061,12 +1191,12 @@ func (m *WipeResponse) MarshalVT() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *WipeResponse) MarshalToVT(dAtA []byte) (int, error) {
+func (m *WipeDisksResponse) MarshalToVT(dAtA []byte) (int, error) {
 	size := m.SizeVT()
 	return m.MarshalToSizedBufferVT(dAtA[:size])
 }
 
-func (m *WipeResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+func (m *WipeDisksResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 	if m == nil {
 		return 0, nil
 	}
@@ -1079,6 +1209,26 @@ func (m *WipeResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.unknownFields)
 	}
 	return len(dAtA) - i, nil
+}
+
+func (m *HelloRequest) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += len(m.unknownFields)
+	return n
+}
+
+func (m *HelloResponse) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += len(m.unknownFields)
+	return n
 }
 
 func (m *GetPowerManagementRequest_IPMI) SizeVT() (n int) {
@@ -1247,7 +1397,7 @@ func (m *RebootResponse) SizeVT() (n int) {
 	return n
 }
 
-func (m *WipeRequest) SizeVT() (n int) {
+func (m *WipeDisksRequest) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1257,7 +1407,7 @@ func (m *WipeRequest) SizeVT() (n int) {
 	return n
 }
 
-func (m *WipeResponse) SizeVT() (n int) {
+func (m *WipeDisksResponse) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1267,6 +1417,108 @@ func (m *WipeResponse) SizeVT() (n int) {
 	return n
 }
 
+func (m *HelloRequest) UnmarshalVT(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return protohelpers.ErrIntOverflow
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HelloRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HelloRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *HelloResponse) UnmarshalVT(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return protohelpers.ErrIntOverflow
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HelloResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HelloResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *GetPowerManagementRequest_IPMI) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2262,7 +2514,7 @@ func (m *RebootResponse) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *WipeRequest) UnmarshalVT(dAtA []byte) error {
+func (m *WipeDisksRequest) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2285,10 +2537,10 @@ func (m *WipeRequest) UnmarshalVT(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: WipeRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: WipeDisksRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: WipeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: WipeDisksRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2313,7 +2565,7 @@ func (m *WipeRequest) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *WipeResponse) UnmarshalVT(dAtA []byte) error {
+func (m *WipeDisksResponse) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2336,10 +2588,10 @@ func (m *WipeResponse) UnmarshalVT(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: WipeResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: WipeDisksResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: WipeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: WipeDisksResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

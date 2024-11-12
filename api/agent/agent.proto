@@ -7,6 +7,10 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
+message HelloRequest {}
+
+message HelloResponse {}
+
 message GetPowerManagementRequest {
   message IPMI {
     string check_username = 1;
@@ -49,13 +53,14 @@ message RebootRequest {}
 
 message RebootResponse {}
 
-message WipeRequest {}
+message WipeDisksRequest {}
 
-message WipeResponse {}
+message WipeDisksResponse {}
 
 service AgentService {
+  rpc Hello(HelloRequest) returns (HelloResponse);
   rpc GetPowerManagement(GetPowerManagementRequest) returns (GetPowerManagementResponse);
   rpc SetPowerManagement(SetPowerManagementRequest) returns (SetPowerManagementResponse);
   rpc Reboot(RebootRequest) returns (RebootResponse);
-  rpc WipeDisks(WipeRequest) returns (WipeResponse);
+  rpc WipeDisks(WipeDisksRequest) returns (WipeDisksResponse);
 }

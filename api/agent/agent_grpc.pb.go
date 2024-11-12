@@ -20,6 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	AgentService_Hello_FullMethodName              = "/management.AgentService/Hello"
 	AgentService_GetPowerManagement_FullMethodName = "/management.AgentService/GetPowerManagement"
 	AgentService_SetPowerManagement_FullMethodName = "/management.AgentService/SetPowerManagement"
 	AgentService_Reboot_FullMethodName             = "/management.AgentService/Reboot"
@@ -30,10 +31,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentServiceClient interface {
+	Hello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error)
 	GetPowerManagement(ctx context.Context, in *GetPowerManagementRequest, opts ...grpc.CallOption) (*GetPowerManagementResponse, error)
 	SetPowerManagement(ctx context.Context, in *SetPowerManagementRequest, opts ...grpc.CallOption) (*SetPowerManagementResponse, error)
 	Reboot(ctx context.Context, in *RebootRequest, opts ...grpc.CallOption) (*RebootResponse, error)
-	WipeDisks(ctx context.Context, in *WipeRequest, opts ...grpc.CallOption) (*WipeResponse, error)
+	WipeDisks(ctx context.Context, in *WipeDisksRequest, opts ...grpc.CallOption) (*WipeDisksResponse, error)
 }
 
 type agentServiceClient struct {
@@ -42,6 +44,16 @@ type agentServiceClient struct {
 
 func NewAgentServiceClient(cc grpc.ClientConnInterface) AgentServiceClient {
 	return &agentServiceClient{cc}
+}
+
+func (c *agentServiceClient) Hello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HelloResponse)
+	err := c.cc.Invoke(ctx, AgentService_Hello_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *agentServiceClient) GetPowerManagement(ctx context.Context, in *GetPowerManagementRequest, opts ...grpc.CallOption) (*GetPowerManagementResponse, error) {
@@ -74,9 +86,9 @@ func (c *agentServiceClient) Reboot(ctx context.Context, in *RebootRequest, opts
 	return out, nil
 }
 
-func (c *agentServiceClient) WipeDisks(ctx context.Context, in *WipeRequest, opts ...grpc.CallOption) (*WipeResponse, error) {
+func (c *agentServiceClient) WipeDisks(ctx context.Context, in *WipeDisksRequest, opts ...grpc.CallOption) (*WipeDisksResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(WipeResponse)
+	out := new(WipeDisksResponse)
 	err := c.cc.Invoke(ctx, AgentService_WipeDisks_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -88,10 +100,11 @@ func (c *agentServiceClient) WipeDisks(ctx context.Context, in *WipeRequest, opt
 // All implementations must embed UnimplementedAgentServiceServer
 // for forward compatibility.
 type AgentServiceServer interface {
+	Hello(context.Context, *HelloRequest) (*HelloResponse, error)
 	GetPowerManagement(context.Context, *GetPowerManagementRequest) (*GetPowerManagementResponse, error)
 	SetPowerManagement(context.Context, *SetPowerManagementRequest) (*SetPowerManagementResponse, error)
 	Reboot(context.Context, *RebootRequest) (*RebootResponse, error)
-	WipeDisks(context.Context, *WipeRequest) (*WipeResponse, error)
+	WipeDisks(context.Context, *WipeDisksRequest) (*WipeDisksResponse, error)
 	mustEmbedUnimplementedAgentServiceServer()
 }
 
@@ -102,6 +115,9 @@ type AgentServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAgentServiceServer struct{}
 
+func (UnimplementedAgentServiceServer) Hello(context.Context, *HelloRequest) (*HelloResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Hello not implemented")
+}
 func (UnimplementedAgentServiceServer) GetPowerManagement(context.Context, *GetPowerManagementRequest) (*GetPowerManagementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPowerManagement not implemented")
 }
@@ -111,7 +127,7 @@ func (UnimplementedAgentServiceServer) SetPowerManagement(context.Context, *SetP
 func (UnimplementedAgentServiceServer) Reboot(context.Context, *RebootRequest) (*RebootResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reboot not implemented")
 }
-func (UnimplementedAgentServiceServer) WipeDisks(context.Context, *WipeRequest) (*WipeResponse, error) {
+func (UnimplementedAgentServiceServer) WipeDisks(context.Context, *WipeDisksRequest) (*WipeDisksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WipeDisks not implemented")
 }
 func (UnimplementedAgentServiceServer) mustEmbedUnimplementedAgentServiceServer() {}
@@ -133,6 +149,24 @@ func RegisterAgentServiceServer(s grpc.ServiceRegistrar, srv AgentServiceServer)
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&AgentService_ServiceDesc, srv)
+}
+
+func _AgentService_Hello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HelloRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServiceServer).Hello(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AgentService_Hello_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServiceServer).Hello(ctx, req.(*HelloRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AgentService_GetPowerManagement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -190,7 +224,7 @@ func _AgentService_Reboot_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _AgentService_WipeDisks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(WipeRequest)
+	in := new(WipeDisksRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -202,7 +236,7 @@ func _AgentService_WipeDisks_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: AgentService_WipeDisks_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).WipeDisks(ctx, req.(*WipeRequest))
+		return srv.(AgentServiceServer).WipeDisks(ctx, req.(*WipeDisksRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -214,6 +248,10 @@ var AgentService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "management.AgentService",
 	HandlerType: (*AgentServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Hello",
+			Handler:    _AgentService_Hello_Handler,
+		},
 		{
 			MethodName: "GetPowerManagement",
 			Handler:    _AgentService_GetPowerManagement_Handler,

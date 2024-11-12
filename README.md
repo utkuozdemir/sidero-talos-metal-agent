@@ -33,7 +33,7 @@ When developing the agent, after doing your changes, run the following command t
    - You can build against a different Talos version using the `IMAGER_TAG` variable.
    - You can customize the extensions repo references using `EXTENSIONS_*` variables.
 
-   This command will build a container image with a tag like `127.0.0.1:5005/siderolabs/talos-metal-agent-boot-assets:v1.9.0-alpha.0-53-g05c620957-agent-198cabf-dirty`, with the following structure:
+   This command will build a container image with a tag like `127.0.0.1:5005/siderolabs/talos-metal-agent-boot-assets:v1.9.0-alpha.2-agent-198cabf-dirty`, with the following structure:
 
    ```text
    Permission     UID:GID       Size  Filetree

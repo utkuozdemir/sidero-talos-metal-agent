@@ -44,6 +44,7 @@ spec:
         EXTENSIONS_REPO=$(EXTENSIONS_REPO)
         EXTENSIONS_REF=$(EXTENSIONS_REF)
         EXTENSIONS_PATH=$(EXTENSIONS_PATH)
+        EXTENSION_DIGESTS_IMAGE=$(EXTENSION_DIGESTS_IMAGE)
         IMAGER_REGISTRY_AND_USERNAME=$(IMAGER_REGISTRY_AND_USERNAME)
         IMAGER_TAG=$(IMAGER_TAG)
         PUSH_TAG=$(PUSH_TAG)
@@ -53,19 +54,19 @@ spec:
         hack/boot-assets/build.sh
     variables: # MAKE SURE to have the same values in the push-boot-assets step as well
       - name: EXTENSIONS_REPO
-        defaultValue: https://github.com/utkuozdemir/sidero-extensions.git # # todo: temporary, revert to the value below after https://github.com/siderolabs/extensions/pull/491 is merged
-        #defaultValue: https://github.com/siderolabs/extensions.git
+        defaultValue: https://github.com/siderolabs/extensions.git
       - name: EXTENSIONS_REF
-        defaultValue: metal-agent-mode # todo: temporary, revert to the value below after https://github.com/siderolabs/extensions/pull/491 is merged
-        #defaultValue: main
+        defaultValue: v1.9.0-alpha.2
       - name: EXTENSIONS_PATH
         defaultValue: guest-agents/metal-agent
+      - name: EXTENSION_DIGESTS_IMAGE
+        defaultValue: ghcr.io/siderolabs/extensions
       - name: IMAGER_REGISTRY_AND_USERNAME
         defaultValue: ghcr.io/siderolabs
       - name: IMAGER_TAG
         # this must point to a commit where Talos agent mode logic was introduced,
         # i.e., not older than https://github.com/siderolabs/talos/commit/2136358d65ddf6ad040ed62c835b335f99a59399
-        defaultValue: v1.9.0-alpha.0-53-g05c620957
+        defaultValue: v1.9.0-alpha.2
       - name: PUSH_TAG
         defaultValue: "" # if specified, needs to be a semver tag for the extension validation to not fail
       - name: OUTPUT_REGISTRY_AND_USERNAME
@@ -91,7 +92,7 @@ spec:
         hack/boot-assets/push.sh
     variables: # MAKE SURE to have the same values in the image-boot-assets step as well
       - name: IMAGER_TAG
-        defaultValue: v1.9.0-alpha.0-53-g05c620957 # point to the same one above
+        defaultValue: v1.9.0-alpha.2 # point to the same one above
       - name: PUSH_TAG
         defaultValue: "" # point to the same one above
       - name: OUTPUT_REGISTRY_AND_USERNAME
