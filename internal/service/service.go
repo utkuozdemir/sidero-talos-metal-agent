@@ -7,11 +7,19 @@ package service
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io"
 
+	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/cosi-project/runtime/pkg/state"
+	"github.com/siderolabs/talos/pkg/machinery/api/storage"
 	talosclient "github.com/siderolabs/talos/pkg/machinery/client"
+	"github.com/siderolabs/talos/pkg/machinery/resources/block"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -38,6 +46,8 @@ type IPMIClient interface {
 // TalosClient represents a Talos API client.
 type TalosClient interface {
 	Reboot(ctx context.Context, opts ...talosclient.RebootMode) error
+	State() state.State
+	BlockDeviceWipe(ctx context.Context, req *storage.BlockDeviceWipeRequest, callOptions ...grpc.CallOption) error
 }
 
 // Server is the agent service server.
@@ -48,6 +58,8 @@ type Server struct {
 	ipmiClientFactory IPMIClientFactory
 
 	logger *zap.Logger
+
+	sf singleflight.Group
 
 	testMode bool
 }
@@ -70,81 +82,157 @@ func (s *Server) Hello(_ context.Context, _ *agentpb.HelloRequest) (*agentpb.Hel
 }
 
 // GetPowerManagement returns the power management info.
-func (s *Server) GetPowerManagement(_ context.Context, req *agentpb.GetPowerManagementRequest) (*agentpb.GetPowerManagementResponse, error) {
+func (s *Server) GetPowerManagement(ctx context.Context, req *agentpb.GetPowerManagementRequest) (*agentpb.GetPowerManagementResponse, error) {
 	s.logger.Debug("get power management", zap.Bool("test_mode", s.testMode))
 
-	if s.testMode {
+	return runSingleflight[*agentpb.GetPowerManagementResponse](ctx, agentpb.AgentService_GetPowerManagement_FullMethodName, &s.sf, req, func() (*agentpb.GetPowerManagementResponse, error) {
+		if s.testMode {
+			return &agentpb.GetPowerManagementResponse{
+				Api: &agentpb.GetPowerManagementResponse_API{},
+			}, nil
+		}
+
+		ipmiClient, err := s.ipmiClientFactory()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error creating ipmi client: %v", err)
+		}
+
+		defer ipmiClient.Close() //nolint:errcheck
+
+		ip, port, err := ipmiClient.GetIPPort()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error getting bmc ip port: %v", err)
+		}
+
+		checkUsername := req.GetIpmi().GetCheckUsername()
+
+		exists, err := ipmiClient.UserExists(checkUsername)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "error checking if user %q exists: %v", checkUsername, err)
+		}
+
 		return &agentpb.GetPowerManagementResponse{
-			Api: &agentpb.GetPowerManagementResponse_API{},
+			Ipmi: &agentpb.GetPowerManagementResponse_IPMI{
+				Address:    ip,
+				Port:       uint32(port),
+				UserExists: exists,
+			},
 		}, nil
-	}
-
-	ipmiClient, err := s.ipmiClientFactory()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error creating ipmi client: %v", err)
-	}
-
-	defer ipmiClient.Close() //nolint:errcheck
-
-	ip, port, err := ipmiClient.GetIPPort()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error getting bmc ip port: %v", err)
-	}
-
-	checkUsername := req.GetIpmi().GetCheckUsername()
-
-	exists, err := ipmiClient.UserExists(checkUsername)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error checking if user %q exists: %v", checkUsername, err)
-	}
-
-	return &agentpb.GetPowerManagementResponse{
-		Ipmi: &agentpb.GetPowerManagementResponse_IPMI{
-			Address:    ip,
-			Port:       uint32(port),
-			UserExists: exists,
-		},
-	}, nil
+	})
 }
 
 // SetPowerManagement sets the power management info.
-func (s *Server) SetPowerManagement(_ context.Context, req *agentpb.SetPowerManagementRequest) (*agentpb.SetPowerManagementResponse, error) {
+func (s *Server) SetPowerManagement(ctx context.Context, req *agentpb.SetPowerManagementRequest) (*agentpb.SetPowerManagementResponse, error) {
 	s.logger.Debug("set power management", zap.Bool("test_mode", s.testMode), zap.String("ipmi_username", req.GetIpmi().GetUsername()))
 
-	if s.testMode {
+	return runSingleflight[*agentpb.SetPowerManagementResponse](ctx, agentpb.AgentService_SetPowerManagement_FullMethodName, &s.sf, req, func() (*agentpb.SetPowerManagementResponse, error) {
+		if s.testMode {
+			return &agentpb.SetPowerManagementResponse{}, nil
+		}
+
+		ipmiClient, err := s.ipmiClientFactory()
+		if err != nil {
+			return nil, fmt.Errorf("error creating ipmi client: %w", err)
+		}
+
+		defer ipmiClient.Close() //nolint:errcheck
+
+		if err = ipmiClient.AttemptUserSetup(req.GetIpmi().GetUsername(), req.GetIpmi().GetPassword(), s.logger); err != nil {
+			return nil, fmt.Errorf("failed to set up IPMI user: %w", err)
+		}
+
 		return &agentpb.SetPowerManagementResponse{}, nil
-	}
-
-	ipmiClient, err := s.ipmiClientFactory()
-	if err != nil {
-		return nil, fmt.Errorf("error creating ipmi client: %w", err)
-	}
-
-	defer ipmiClient.Close() //nolint:errcheck
-
-	if err = ipmiClient.AttemptUserSetup(req.GetIpmi().GetUsername(), req.GetIpmi().GetPassword(), s.logger); err != nil {
-		return nil, fmt.Errorf("failed to set up IPMI user: %w", err)
-	}
-
-	return &agentpb.SetPowerManagementResponse{}, nil
+	})
 }
 
 // Reboot reboots the machine.
-func (s *Server) Reboot(ctx context.Context, _ *agentpb.RebootRequest) (*agentpb.RebootResponse, error) {
-	s.logger.Info("reboot requested")
+func (s *Server) Reboot(ctx context.Context, req *agentpb.RebootRequest) (*agentpb.RebootResponse, error) {
+	s.logger.Info("reboot")
 
-	if err := s.talosClient.Reboot(ctx, talosclient.WithPowerCycle); err != nil {
-		return nil, err
-	}
+	return runSingleflight[*agentpb.RebootResponse](ctx, agentpb.AgentService_Reboot_FullMethodName, &s.sf, req, func() (*agentpb.RebootResponse, error) {
+		if err := s.talosClient.Reboot(ctx, talosclient.WithPowerCycle); err != nil {
+			return nil, err
+		}
 
-	return &agentpb.RebootResponse{}, nil
+		return &agentpb.RebootResponse{}, nil
+	})
 }
 
 // WipeDisks wipes the disks.
-//
-// todo: eventually implement (probably in machined)
-func (s *Server) WipeDisks(context.Context, *agentpb.WipeDisksRequest) (*agentpb.WipeDisksResponse, error) {
-	s.logger.Info("wipe disks requested")
+func (s *Server) WipeDisks(ctx context.Context, req *agentpb.WipeDisksRequest) (*agentpb.WipeDisksResponse, error) {
+	s.logger.Info("wipe disks", zap.Bool("zeroes", req.Zeroes), zap.Bool("test_mode", s.testMode))
 
-	return nil, status.Errorf(codes.Unimplemented, "method WipeDisks not implemented")
+	return runSingleflight[*agentpb.WipeDisksResponse](ctx, agentpb.AgentService_WipeDisks_FullMethodName, &s.sf, req, func() (*agentpb.WipeDisksResponse, error) {
+		method := storage.BlockDeviceWipeDescriptor_FAST
+		if req.Zeroes {
+			method = storage.BlockDeviceWipeDescriptor_ZEROES
+		}
+
+		diskList, err := safe.StateListAll[*block.Disk](ctx, s.talosClient.State())
+		if err != nil {
+			return nil, fmt.Errorf("failed to list disks: %w", err)
+		}
+
+		deviceNames := make([]string, 0, diskList.Len())
+		devices := make([]*storage.BlockDeviceWipeDescriptor, 0, diskList.Len())
+
+		for disk := range diskList.All() {
+			if disk.TypedSpec().Readonly || disk.TypedSpec().CDROM {
+				continue
+			}
+
+			deviceNames = append(deviceNames, disk.Metadata().ID())
+			devices = append(devices, &storage.BlockDeviceWipeDescriptor{
+				Device:          disk.Metadata().ID(),
+				Method:          method,
+				SkipVolumeCheck: true,
+			})
+		}
+
+		s.logger.Debug("going to wipe disks", zap.Strings("devices", deviceNames))
+
+		if err = s.talosClient.BlockDeviceWipe(ctx, &storage.BlockDeviceWipeRequest{
+			Devices: devices,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to wipe disks: %w", err)
+		}
+
+		return &agentpb.WipeDisksResponse{}, nil
+	})
+}
+
+type marshaler interface {
+	MarshalVT() ([]byte, error)
+}
+
+func runSingleflight[T any](ctx context.Context, keyPrefix string, sf *singleflight.Group, req marshaler, fn func() (T, error)) (T, error) {
+	var zero T
+
+	b, err := req.MarshalVT()
+	if err != nil {
+		return zero, err
+	}
+
+	hash := md5.Sum(b)
+	key := keyPrefix + "-" + hex.EncodeToString(hash[:])
+
+	ch := sf.DoChan(key, func() (any, error) {
+		return fn()
+	})
+
+	select {
+	case <-ctx.Done():
+		return zero, ctx.Err()
+	case v := <-ch:
+		if v.Err != nil {
+			return zero, v.Err
+		}
+
+		result, ok := v.Val.(T)
+		if !ok {
+			return zero, fmt.Errorf("unexpected type: %T", v.Val)
+		}
+
+		return result, nil
+	}
 }

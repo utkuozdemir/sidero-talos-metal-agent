@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/cosi-project/runtime/pkg/state"
 	"github.com/jhump/grpctunnel"
 	"github.com/jhump/grpctunnel/tunnelpb"
 	"github.com/siderolabs/talos/pkg/grpc/middleware/authz"
@@ -98,7 +99,15 @@ func (a *Agent) Run(ctx context.Context) error {
 	return nil
 }
 
-func buildTalosClient(ctx context.Context) (*talosclient.Client, error) {
+type talosClientWrapper struct {
+	*talosclient.Client
+}
+
+func (c talosClientWrapper) State() state.State {
+	return c.COSI
+}
+
+func buildTalosClient(ctx context.Context) (talosClientWrapper, error) {
 	opts := []talosclient.OptionFunc{
 		talosclient.WithUnixSocket(talosconstants.MachineSocketPath),
 		talosclient.WithGRPCDialOptions(grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -108,10 +117,10 @@ func buildTalosClient(ctx context.Context) (*talosclient.Client, error) {
 
 	client, err := talosclient.New(ctx, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to construct client: %w", err)
+		return talosClientWrapper{}, fmt.Errorf("failed to construct client: %w", err)
 	}
 
-	return client, nil
+	return talosClientWrapper{client}, nil
 }
 
 func idHeaderUnaryInterceptor(id string) grpc.UnaryClientInterceptor {

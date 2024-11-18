@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-12T14:03:44Z by kres b6443eb.
+# Generated on 2024-11-26T21:50:10Z by kres 232fe63.
 
 # common variables
 
@@ -17,9 +17,9 @@ WITH_RACE ?= false
 REGISTRY ?= ghcr.io
 USERNAME ?= siderolabs
 REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
-PROTOBUF_GO_VERSION ?= 1.35.1
+PROTOBUF_GO_VERSION ?= 1.35.2
 GRPC_GO_VERSION ?= 1.5.1
-GRPC_GATEWAY_VERSION ?= 2.23.0
+GRPC_GATEWAY_VERSION ?= 2.24.0
 VTPROTOBUF_VERSION ?= 0.6.0
 GOIMPORTS_VERSION ?= 0.27.0
 DEEPCOPY_VERSION ?= v0.5.6
@@ -41,12 +41,13 @@ PLATFORM ?= linux/amd64
 PROGRESS ?= auto
 PUSH ?= false
 CI_ARGS ?=
+BUILDKIT_MULTI_PLATFORM ?= 1
 COMMON_ARGS = --file=Dockerfile
 COMMON_ARGS += --provenance=false
 COMMON_ARGS += --progress=$(PROGRESS)
 COMMON_ARGS += --platform=$(PLATFORM)
 COMMON_ARGS += --push=$(PUSH)
-COMMON_ARGS += --build-arg=BUILDKIT_MULTI_PLATFORM=1
+COMMON_ARGS += --build-arg=BUILDKIT_MULTI_PLATFORM=$(BUILDKIT_MULTI_PLATFORM)
 COMMON_ARGS += --build-arg=ARTIFACTS="$(ARTIFACTS)"
 COMMON_ARGS += --build-arg=SHA="$(SHA)"
 COMMON_ARGS += --build-arg=TAG="$(TAG)"
@@ -73,11 +74,11 @@ TOOLCHAIN ?= docker.io/golang:1.23-alpine
 # extra variables
 
 EXTENSIONS_REPO ?= https://github.com/siderolabs/extensions.git
-EXTENSIONS_REF ?= v1.9.0-alpha.2
+EXTENSIONS_REF ?= v1.9.0-alpha.3
 EXTENSIONS_PATH ?= guest-agents/metal-agent
 EXTENSION_DIGESTS_IMAGE ?= ghcr.io/siderolabs/extensions
 IMAGER_REGISTRY_AND_USERNAME ?= ghcr.io/siderolabs
-IMAGER_TAG ?= v1.9.0-alpha.2
+IMAGER_TAG ?= v1.9.0-alpha.3
 PUSH_TAG ?=
 OUTPUT_REGISTRY_AND_USERNAME ?= ghcr.io/siderolabs
 TEMP_REGISTRY ?= 127.0.0.1:5005
@@ -158,18 +159,18 @@ target-%:  ## Builds the specified target defined in the Dockerfile. The build r
 
 local-%:  ## Builds the specified target defined in the Dockerfile using the local output type. The build result will be output to the specified local destination.
 	@$(MAKE) target-$* TARGET_ARGS="--output=type=local,dest=$(DEST) $(TARGET_ARGS)"
-	@PLATFORM=$(PLATFORM) ARTIFACTS=$(ARTIFACTS) bash -c '\
+	@PLATFORM=$(PLATFORM) DEST=$(DEST) bash -c '\
 	  for platform in $$(tr "," "\n" <<< "$$PLATFORM"); do \
 	    echo $$platform; \
 	    directory="$${platform//\//_}"; \
-	    if [[ -d "$$ARTIFACTS/$$directory" ]]; then \
-	      mv "$$ARTIFACTS/$$directory/"* $$ARTIFACTS; \
-	      rmdir "$$ARTIFACTS/$$directory/"; \
+	    if [[ -d "$$DEST/$$directory" ]]; then \
+	      mv "$$DEST/$$directory/"* $$DEST; \
+	      rmdir "$$DEST/$$directory/"; \
 	    fi; \
 	  done'
 
 generate:  ## Generate .proto definitions.
-	@$(MAKE) local-$@ DEST=./
+	@$(MAKE) local-$@ DEST=./ BUILDKIT_MULTI_PLATFORM=0
 
 lint-golangci-lint:  ## Runs golangci-lint linter.
 	@$(MAKE) target-$@

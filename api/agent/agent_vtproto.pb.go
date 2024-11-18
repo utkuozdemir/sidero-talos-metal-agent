@@ -261,6 +261,7 @@ func (m *WipeDisksRequest) CloneVT() *WipeDisksRequest {
 		return (*WipeDisksRequest)(nil)
 	}
 	r := new(WipeDisksRequest)
+	r.Zeroes = m.Zeroes
 	if len(m.unknownFields) > 0 {
 		r.unknownFields = make([]byte, len(m.unknownFields))
 		copy(r.unknownFields, m.unknownFields)
@@ -552,6 +553,9 @@ func (this *WipeDisksRequest) EqualVT(that *WipeDisksRequest) bool {
 	if this == that {
 		return true
 	} else if this == nil || that == nil {
+		return false
+	}
+	if this.Zeroes != that.Zeroes {
 		return false
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
@@ -1175,6 +1179,16 @@ func (m *WipeDisksRequest) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
+	if m.Zeroes {
+		i--
+		if m.Zeroes {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1403,6 +1417,9 @@ func (m *WipeDisksRequest) SizeVT() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Zeroes {
+		n += 2
+	}
 	n += len(m.unknownFields)
 	return n
 }
@@ -2543,6 +2560,26 @@ func (m *WipeDisksRequest) UnmarshalVT(dAtA []byte) error {
 			return fmt.Errorf("proto: WipeDisksRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zeroes", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Zeroes = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := protohelpers.Skip(dAtA[iNdEx:])

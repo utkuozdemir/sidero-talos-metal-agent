@@ -53,7 +53,9 @@ message RebootRequest {}
 
 message RebootResponse {}
 
-message WipeDisksRequest {}
+message WipeDisksRequest {
+  bool zeroes = 1;
+}
 
 message WipeDisksResponse {}
 
