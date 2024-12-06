@@ -26,9 +26,8 @@ import (
 	agentpb "github.com/siderolabs/talos-metal-agent/api/agent"
 	"github.com/siderolabs/talos-metal-agent/internal/ipmi"
 	"github.com/siderolabs/talos-metal-agent/internal/service"
+	"github.com/siderolabs/talos-metal-agent/pkg/constants"
 )
-
-const machineIDMetadataKey = "machine-id"
 
 // Agent is the Talos agent.
 type Agent struct {
@@ -125,7 +124,7 @@ func buildTalosClient(ctx context.Context) (talosClientWrapper, error) {
 
 func idHeaderUnaryInterceptor(id string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		ctx = metadata.AppendToOutgoingContext(ctx, machineIDMetadataKey, id)
+		ctx = metadata.AppendToOutgoingContext(ctx, constants.MachineIDMetadataKey, id)
 
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
@@ -133,7 +132,7 @@ func idHeaderUnaryInterceptor(id string) grpc.UnaryClientInterceptor {
 
 func idHeaderStreamInterceptor(id string) grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		ctx = metadata.AppendToOutgoingContext(ctx, machineIDMetadataKey, id)
+		ctx = metadata.AppendToOutgoingContext(ctx, constants.MachineIDMetadataKey, id)
 
 		return streamer(ctx, desc, cc, method, opts...)
 	}

@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-11-26T21:50:10Z by kres 232fe63.
+# Generated on 2024-12-06T12:26:36Z by kres 1ebe796.
 
 # common variables
 
@@ -21,11 +21,11 @@ PROTOBUF_GO_VERSION ?= 1.35.2
 GRPC_GO_VERSION ?= 1.5.1
 GRPC_GATEWAY_VERSION ?= 2.24.0
 VTPROTOBUF_VERSION ?= 0.6.0
-GOIMPORTS_VERSION ?= 0.27.0
+GOIMPORTS_VERSION ?= 0.28.0
 DEEPCOPY_VERSION ?= v0.5.6
-GOLANGCILINT_VERSION ?= v1.62.0
+GOLANGCILINT_VERSION ?= v1.62.2
 GOFUMPT_VERSION ?= v0.7.0
-GO_VERSION ?= 1.23.3
+GO_VERSION ?= 1.23.4
 GO_BUILDFLAGS ?=
 GO_LDFLAGS ?=
 CGO_ENABLED ?= 0
@@ -74,11 +74,11 @@ TOOLCHAIN ?= docker.io/golang:1.23-alpine
 # extra variables
 
 EXTENSIONS_REPO ?= https://github.com/siderolabs/extensions.git
-EXTENSIONS_REF ?= v1.9.0-alpha.3
+EXTENSIONS_REF ?= v1.9.0-beta.0
 EXTENSIONS_PATH ?= guest-agents/metal-agent
 EXTENSION_DIGESTS_IMAGE ?= ghcr.io/siderolabs/extensions
 IMAGER_REGISTRY_AND_USERNAME ?= ghcr.io/siderolabs
-IMAGER_TAG ?= v1.9.0-alpha.3
+IMAGER_TAG ?= v1.9.0-beta.0
 PUSH_TAG ?=
 OUTPUT_REGISTRY_AND_USERNAME ?= ghcr.io/siderolabs
 TEMP_REGISTRY ?= 127.0.0.1:5005
