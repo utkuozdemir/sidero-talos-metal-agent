@@ -1,6 +1,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-12-06T12:26:36Z by kres 1ebe796.
+# Generated on 2024-12-13T12:31:24Z by kres 8183c20.
 
 # common variables
 
@@ -74,11 +74,11 @@ TOOLCHAIN ?= docker.io/golang:1.23-alpine
 # extra variables
 
 EXTENSIONS_REPO ?= https://github.com/siderolabs/extensions.git
-EXTENSIONS_REF ?= v1.9.0-beta.0
+EXTENSIONS_REF ?= v1.9.0-beta.1
 EXTENSIONS_PATH ?= guest-agents/metal-agent
 EXTENSION_DIGESTS_IMAGE ?= ghcr.io/siderolabs/extensions
 IMAGER_REGISTRY_AND_USERNAME ?= ghcr.io/siderolabs
-IMAGER_TAG ?= v1.9.0-beta.0
+IMAGER_TAG ?= v1.9.0-beta.1
 PUSH_TAG ?=
 OUTPUT_REGISTRY_AND_USERNAME ?= ghcr.io/siderolabs
 TEMP_REGISTRY ?= 127.0.0.1:5005
@@ -164,7 +164,7 @@ local-%:  ## Builds the specified target defined in the Dockerfile using the loc
 	    echo $$platform; \
 	    directory="$${platform//\//_}"; \
 	    if [[ -d "$$DEST/$$directory" ]]; then \
-	      mv "$$DEST/$$directory/"* $$DEST; \
+	      mv -f "$$DEST/$$directory/"* $$DEST; \
 	      rmdir "$$DEST/$$directory/"; \
 	    fi; \
 	  done'
