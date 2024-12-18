@@ -2,17 +2,17 @@
 
 # THIS FILE WAS AUTOMATICALLY GENERATED, PLEASE DO NOT EDIT.
 #
-# Generated on 2024-12-06T12:12:05Z by kres 1ebe796.
+# Generated on 2024-12-18T11:10:06Z by kres b9507d6.
 
 ARG TOOLCHAIN
 
 # runs markdownlint
 FROM docker.io/oven/bun:1.1.38-alpine AS lint-markdown
 WORKDIR /src
-RUN bun i markdownlint-cli@0.43.0 sentences-per-line@0.2.1
+RUN bun i markdownlint-cli@0.43.0 sentences-per-line@0.3.0
 COPY .markdownlint.json .
 COPY ./README.md ./README.md
-RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules node_modules/sentences-per-line/index.js .
+RUN bunx markdownlint --ignore "CHANGELOG.md" --ignore "**/node_modules/**" --ignore '**/hack/chglog/**' --rules sentences-per-line .
 
 # collects proto specs
 FROM scratch AS proto-specs
